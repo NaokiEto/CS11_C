@@ -85,7 +85,7 @@ int main(void)
         /* the year for which the date of Easter is to be determined. */
         result = scanf("%d", &year);
 
-        /* if we reach the end of the file, go out of while loop la;ksjdfl;askjdfl;aksjd*/
+        /* if we reach the end of the file, go out of while loop */
         if (result == EOF)
         {
             break;
