@@ -1,0 +1,294 @@
+/*
+ *
+ * triangle_game.c takes the in the input of where the pegs are in a
+ * 15-hole triangle board, and determines if the board is solvable via
+ * solitaire game rules and recursion.
+ */
+
+#include <stdio.h>
+#include "triangle_routines.h"
+
+#define BOARD_LENGTH 15
+
+#define NMOVES 36
+
+/* All the moves for the board */
+int moves[NMOVES][3] =
+{
+    {0, 1, 3},
+    {3, 1, 0},
+    {1, 3, 6},
+    {6, 3, 1},
+    {3, 6, 10},
+    {10, 6, 3},
+    {0, 2, 5},
+    {5, 2, 0},
+    {2, 5, 9},
+    {9, 5, 2},
+    {5, 9, 14},
+    {14, 9, 5},
+    {3, 4, 5},
+    {5, 4, 3},
+    {1, 4, 8},
+    {8, 4, 1},
+    {4, 8, 13},
+    {13, 8, 4},
+    {4, 7, 11},
+    {11, 7, 4},
+    {2, 4, 7},
+    {7, 4, 2},
+    {3, 7, 12},
+    {12, 7, 3},
+    {5, 8, 12},
+    {12, 8, 5},
+    {6, 7, 8},
+    {8, 7, 6},
+    {7, 8, 9},
+    {9, 8, 7},
+    {10, 11, 12},
+    {12, 11, 10},
+    {11, 12, 13},
+    {13, 12, 11},
+    {12, 13, 14},
+    {14, 13, 12},
+};
+
+/* 
+ * npegs:
+ *      This functions takes a board (represented by an array),
+ *      and returns the number of pegs on the board.
+ *
+ *      Arguments:
+ *      -- board: an array of integers
+ *
+ *      Return value:
+ *      -- count_pegs: integer amount of pegs
+ * 
+ */
+
+int npegs(int board[])
+{
+    int count_pegs = 0;
+
+    int i;
+
+    for (i = 0; i < BOARD_LENGTH; i++)
+    {
+        if (board[i] != 0)
+        {
+            count_pegs += 1;
+        }
+    }
+
+    return count_pegs;
+}
+
+/* 
+ * valid_move:
+ *      This function takes a board (represented by an array), 
+ *      and a move (represented by an array of 3 integers), and
+ *      determines if the move is valid given the board configuration.
+ *      It returns 1 if the move is valid on this board, otherwise 
+ *      it returns 0. 
+ *
+ *      Arguments:
+ *      -- board: an array of integers
+ *      -- move: an array of 3 integers representing a move. The peg
+ *               in the first element of the array is to jump over
+ *               the second element of the array, and land in the 
+ *               third element of the array.
+ *
+ *      Return value:
+ *      -- Returns 1 if move is valid, returns 0 otherwise.
+ *
+ */
+
+int valid_move(int board[], int move[])
+{
+    /* 
+      * Move is valid if there are pegs in the first two elements, and no peg
+      * in the third element 
+      *
+      */
+    if ((board[move[0]] != 0) && (board[move[1]] != 0) 
+         && (board[move[2]] == 0))
+    {
+        return 1;
+    }
+
+    else
+    {
+        return 0;
+    }
+}
+
+/* 
+ * make_move:
+ *      This function takes in a board (represented by an array of integers),
+ *      and a move (represented by an array of 3 integers), and makes the 
+ *      move on the board. So, it changes the board array.
+ *
+ *      Arguments:
+ *      -- board: an array of integers
+ *      -- move: an array of 3 integers representing a move. The peg
+ *               in the first element of the array is to jump over
+ *               the second element of the array, and land in the 
+ *               third element of the array.
+ *
+ *      Return value:
+ *      -- None
+ *
+ */
+
+void make_move(int board[], int move[])
+{
+        board[move[2]] = 1;
+        board[move[1]] = 0;
+        board[move[0]] = 0;
+}
+
+/* 
+ * unmake_move:
+ *      This function takes in a board (represented by an array of integers),
+ *      and a move (represented by an array of 3 integers), and unmakes the 
+ *      move on the board to a previous configuration. So, it changes the 
+ *      board array.
+ *
+ *      Arguments:
+ *      -- board: an array of integers
+ *      -- move: an array of 3 integers representing the unmove. The peg
+ *               in the first element of the array is to jump over
+ *               the second element of the array, and land in the 
+ *               third element of the array.
+ *
+ *      Return value:
+ *      -- None
+ *
+ */
+
+void unmake_move(int board[], int move[])
+{
+    board[move[0]] = 1;
+    board[move[1]] = 1;
+    board[move[2]] = 0;
+}
+
+/* 
+ * solve:
+ *      This functions solves the game starting from this board.  It returns
+ *      1 if the game can be solved; otherwise it returns 0.  It does not 
+ *      permanently alter the board passed in. Once a solution is found, 
+ *      it print the boards making up the solution in reverse order.
+ *
+ *      Arguments:
+ *      -- board: an array of integers
+ *
+ *      Return value:
+ *      -- Returns 1 if the game can be solved; otherwise, it returns 0
+ *
+ */
+int solve(int board[])
+{
+    int count_pegs = npegs(board);
+
+    int movenum = 0;
+
+    int solveval = 0;
+
+    /* No pegs in the board to begin with, the board is not solvable */
+    if (count_pegs == 0)
+    {
+        return 0;
+    }
+
+    /* Base Case - if the board only has one peg, then it's solvable */
+    else if (count_pegs == 1)
+    {        
+        triangle_print(board);
+        
+        return 1;
+    }
+
+    /* Recursive step */
+    else
+    {
+        while (count_pegs != 0 && count_pegs != 1)
+        {
+            /*
+             * If the move is valid, attempt to make the move. Else,
+             * try another move to see if it is valid.
+             *
+             */
+            if (valid_move(board, moves[movenum]))
+            {
+                make_move(board, moves[movenum]);
+                solveval = solve(board);
+
+                /* 
+                 * If the move does not lead to a solved board, unmake
+                 * the move and try another move. Else, print board and 
+                 * return 1.
+                 *
+                 */
+
+                if (solveval == 0)
+                {
+                    unmake_move(board, moves[movenum]);
+                    movenum += 1;
+                }
+
+                else
+                {
+                    unmake_move(board, moves[movenum]);
+                    triangle_print(board);
+                    return 1;
+                }
+                
+
+                count_pegs = npegs(board);
+            }
+
+            else
+            {
+                movenum += 1;
+            }
+
+            /*
+             * If we have gone through all the possible moves and no solution,
+             * return 0
+             *
+             */
+            if (movenum >= NMOVES)
+            {
+                return 0;
+            }
+        }
+
+        return 1;
+    }
+}
+
+
+int main(void)
+{
+    int board[BOARD_LENGTH];
+    int solveable;
+    triangle_input(board);
+
+    /* Solvable board outputs 1, not solvable outputs 0 */
+    solveable = solve(board);
+
+    if (solveable)
+    {
+        printf("Board is solvable\n");
+    }
+    else
+    {
+        printf("Board is not solvable\n");
+    }
+
+    printf("Here is the board you entered:\n");
+    triangle_print(board);
+
+    return 0;
+}

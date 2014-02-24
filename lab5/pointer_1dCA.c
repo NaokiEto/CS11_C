@@ -1,0 +1,205 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "memcheck.h"
+
+/*
+ * update:
+ *      This function updates the 1dCA at each generation using poiner
+ *      arithmetic.
+ *
+ *      Arguments:
+ *          --arr: array of integers, which represents one generation
+ *          --length: length of array
+ *
+ *      Return value: None
+ *
+ */
+
+void update(int* arr, int length)
+{
+    int i;
+
+    int *prev, *curr, *next;
+
+    prev = arr;
+    curr = arr + 1;
+    next = arr + 2;
+
+    for (i = 0; i < length - 2; i++)
+    {
+        /* 
+         * If the current cell is empty, and one of the two 
+         * adjacent cells is full (but not both), set the current cell to 
+         * be full.
+         *
+         */
+        if(*curr == 0 && *prev != 1 && *next == 1)
+        {
+            *curr = 1;
+        }
+        else if (*curr == 0 && *prev == 1 && *next != 1)
+        {
+            *curr = 1;
+        }
+        /* Otherwise, set the current cell to be empty */
+        else
+        {
+            *curr = 0;
+        }
+        prev++;
+        curr++;
+        next++;
+    }
+}
+
+/*
+ * initialize_arr:
+ *      This function initializes the first generation of the 1dCA array.
+ *      The first and last cells are set to empty while the rest of the
+ *      cells are randomly set to full or empty (1 or 0 respectively).
+ *
+ *      Arguments:
+ *          --cells: number of cells in the 1dCA array
+ *
+ *      Return value:
+ *          --an array of 0's and 1's representing the initial generation.
+ *
+ */
+
+int* initialize_arr(int cells)
+{
+    int i, r;
+    int* arr;
+
+    arr = (int *) calloc(cells, sizeof(int));
+
+    /* Make sure the array can be dynamically allocated */
+    if (arr == NULL)
+    {
+        fprintf(stderr, "Out of memory!\n");
+        exit(1);
+    }
+
+    /* The seed for the random number generator */
+    srand(time(0));
+
+    /* Set the first and last cells to be empty */
+    arr[0] = 0;
+    arr[cells - 1] = 0;
+
+    if (cells > 2)
+    {
+        for (i = 1; i < cells - 1; i++)
+        {
+            /* calculate random number in range [0, 1] */
+            r = rand()%2;
+
+            arr[i] = r;
+        }
+    }
+    return arr;
+}
+
+/*
+ * print_array:
+ *      This function prints out the array when called. It prints a "."
+ *      for an empty cell and a "*" for a full cell.
+ *
+ *      Arguments:
+ *          --arr: array of integers, which represents one generation
+ *          --length: length of array
+ *
+ *      Return value: none
+ *
+ */
+
+void print_array(int* arr, int length)
+{
+    int i;
+
+    for (i = 0; i < length; i++)
+    {
+        if (arr[i] == 0)
+        {
+            printf(".");
+        }
+        else
+        {
+            printf("*");
+        }
+    }
+
+    printf("\n");
+}
+
+/*
+ * cmd_args_error:
+ *      This function prints out the error message when called.
+ *      
+ *      Arguments:
+ *          --program_name: char pointer, which represents the program name
+ *
+ *      Return value: none
+ *
+ */
+
+void cmd_args_error(char* program_name)
+{
+    fprintf(stderr, "usage: %s num_cells num_generations\n", program_name);
+    exit(1);
+}
+
+
+int main(int argc, char* argv[])
+{
+    int i, num_cells, num_generations;
+
+    int *arr_next, *arr_current;
+
+    int count_generations = 0;
+
+    /* 
+     * If we do not have two additional command line arguments (number of 
+     * cells in 1dCA and number of generations to compute), then print
+     * an error message.
+     *
+     */
+    if (argc != 3)
+    {
+        cmd_args_error(argv[0]);
+    }
+
+    num_cells = atoi(argv[1]);
+    num_generations = atoi(argv[2]);
+
+    /* Initialize and dynamically allocate the memory using calloc. */
+    arr_next = initialize_arr(num_cells);
+    arr_current = (int *) calloc(num_cells, sizeof(int));
+
+    /* 
+     * Copy the next array's cells into the current array's cells. Then,
+     * update the next array for the next generation.
+     *
+     */
+    while (count_generations < num_generations)
+    {
+        for (i = 0; i < num_cells; i++)
+        {
+            arr_current[i] = arr_next[i];
+        }
+
+        print_array(arr_current, num_cells);
+
+        update(arr_next, num_cells);
+        count_generations ++;
+    }
+
+    /* Free the memory that we calloced. */
+    free(arr_current);
+    free(arr_next);
+
+    print_memory_leaks();
+
+    return 0;
+}

@@ -1,0 +1,30 @@
+#
+# CS 11: Makefile for C track, assignment 5.
+#
+
+CC     = gcc
+CFLAGS = -g -Wall -Wstrict-prototypes -ansi -pedantic
+
+all: array_1dCA pointer_1dCA
+
+array_1dCA: array_1dCA.o memcheck.o
+	$(CC) array_1dCA.o memcheck.o -o array_1dCA
+
+array_1dCA.o: array_1dCA.c
+	$(CC) $(CFLAGS) -c array_1dCA.c
+
+pointer_1dCA: pointer_1dCA.o memcheck.o
+	$(CC) pointer_1dCA.o memcheck.o -o pointer_1dCA
+
+pointer_1dCA.o: pointer_1dCA.c
+	$(CC) $(CFLAGS) -c pointer_1dCA.c
+
+memcheck.o: memcheck.c memcheck.h
+	$(CC) $(CFLAGS) -c memcheck.c
+
+check:
+	c_style_check array_1dCA.c pointer_1dCA.c
+
+clean:
+	rm -f array_1dCA pointer_1dCA *.o
+
